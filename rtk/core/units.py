@@ -190,6 +190,15 @@ def units_for(dimension):
     return units
 
 
+def all_dimensions():
+    # Return a sorted list of every dimension in CONVERSION_FACTORS.
+    dimensions = []
+    for dim, _scale, _offset in CONVERSION_FACTORS.values():
+        if dim not in dimensions:
+            dimensions.append(dim)
+    return sorted(dimensions)
+
+
 # tester
 if __name__ == "__main__":
     import numpy as np

@@ -1,0 +1,74 @@
+/* Layout and styling. $primary etc. come from the PHOSPHOR theme. */
+
+Screen {
+    background: $background;
+}
+
+#main {
+    height: 1fr;
+}
+
+#console {
+    width: 1fr;
+    border: round $primary;
+    border-title-color: $primary;
+    padding: 0 1;
+}
+
+#log {
+    height: 1fr;
+    background: $background;
+    scrollbar-color: $secondary;
+}
+
+#cmd {
+    border: tall $secondary;
+    background: $surface;
+}
+
+#cmd:focus {
+    border: tall $primary;
+}
+
+#dock {
+    display: none;
+    width: 1fr;
+}
+
+#dock.open {
+    display: block;
+}
+
+ToolPanel {
+    border: round $accent;
+    border-title-color: $accent;
+    border-subtitle-color: $secondary;
+    padding: 0 1;
+}
+
+.tool-header {
+    height: auto;
+    align-horizontal: right;
+}
+
+.close-btn {
+    min-width: 9;
+}
+
+.row {
+    height: auto;
+}
+
+.row Select {
+    width: 1fr;
+}
+
+.arrow {
+    padding: 1 1;
+}
+
+#result {
+    margin-top: 1;
+    color: $accent;
+    text-style: bold;
+}
