@@ -6,3 +6,7 @@ select = ["E", "W", "F", "N", "I"]
 
 [tool.ruff.lint.per-file-ignores]
 "rtk/core/*" = ["N803", "N806"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

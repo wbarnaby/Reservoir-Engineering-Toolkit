@@ -61,13 +61,22 @@ class UnitsPanel(ToolPanel):
     @on(Input.Submitted, "#value")
     def do_convert(self) -> None:
         result = self.query_one("#result", Static)
-        text = self.query_one("#value", Input).value
+        text = self.query_one("#value", Input).value.strip()
         from_unit = self.query_one("#from-unit", Select).value
         to_unit = self.query_one("#to-unit", Select).value
         delta = self.query_one("#delta", Checkbox).value
 
+        if not text:
+            result.update("Error: enter a value to convert")
+            return
+
         try:
             value = float(text)
+        except ValueError:
+            result.update(f"Error: '{text}' is not a number")
+            return
+
+        try:
             answer = convert(value, from_unit, to_unit, delta=delta)
         except ValueError as err:
             result.update(f"Error: {err}")
