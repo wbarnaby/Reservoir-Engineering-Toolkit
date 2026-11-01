@@ -8,5 +8,5 @@ select = ["E", "W", "F", "N", "I"]
 "rtk/core/*" = ["N803", "N806"]
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = ["rtk/tests"]
 pythonpath = ["."]
