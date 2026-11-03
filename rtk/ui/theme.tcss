@@ -46,6 +46,10 @@ ToolPanel {
     padding: 0 1;
 }
 
+#path {
+    width: 1fr;
+}
+
 .tool-header {
     height: auto;
     align-horizontal: right;
@@ -71,4 +75,29 @@ ToolPanel {
     margin-top: 1;
     color: $accent;
     text-style: bold;
+}
+
+/* ---------- p/z panel ---------- */
+
+.field {
+    width: 1fr;
+    height: auto;
+}
+
+#pz-results {
+    height: auto;
+    margin: 1 0;
+}
+
+TabbedContent {
+    height: auto;
+}
+
+PlotextPlot {
+    height: 22;
+}
+
+#pz-table {
+    height: auto;
+    max-height: 14;
 }
