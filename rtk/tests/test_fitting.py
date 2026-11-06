@@ -1,4 +1,4 @@
-"""Tests for rtk.core.fitting."""
+# Tests for rtk.core.fitting.
 
 import numpy as np
 import pytest
@@ -8,7 +8,7 @@ from rtk.core.fitting import fit_line, fit_origin, fit_stats
 
 @pytest.fixture
 def hand_data():
-    """Small data set solved by hand: x=[1,2,3], y=[1,2,2]."""
+    # Small data set solved by hand: x=[1,2,3], y=[1,2,2].
     x = np.array([1.0, 2.0, 3.0])
     y = np.array([1.0, 2.0, 2.0])
     return x, y

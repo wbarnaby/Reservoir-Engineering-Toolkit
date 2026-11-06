@@ -1,4 +1,4 @@
-"""Retro phosphor-green theme shared by the whole UI."""
+# Retro phosphor-green theme shared by the whole UI.
 
 from textual.theme import Theme
 

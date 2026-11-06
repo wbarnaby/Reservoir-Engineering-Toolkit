@@ -1,4 +1,4 @@
-"""Tests for rtk.core.material_balance."""
+# Tests for rtk.core.material_balance.
 
 import numpy as np
 import pytest
@@ -12,7 +12,7 @@ T_RES = 659.67  # 200 degF in degR
 
 @pytest.fixture
 def gas_data():
-    """Worked example from the derivation (Section 12)."""
+    # Worked example from the derivation (Section 12).
     gp = np.array([0.0, 10.0, 20.0, 30.0, 40.0])
     p = np.array([4400.0, 3915.0, 3480.0, 3080.0, 2670.0])
     z = np.array([0.88, 0.87, 0.87, 0.88, 0.89])

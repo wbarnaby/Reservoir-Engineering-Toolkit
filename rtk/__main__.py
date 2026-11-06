@@ -1,4 +1,4 @@
-"""Entry point: 'python -m rtk' starts the toolkit."""
+# Entry point: 'python -m rtk' starts the toolkit.
 
 from rtk.ui.app import ToolkitApp
 

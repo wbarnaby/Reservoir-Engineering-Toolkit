@@ -1,4 +1,4 @@
-"""Tests for rtk.core.units."""
+# Tests for rtk.core.units.
 
 import numpy as np
 import pytest

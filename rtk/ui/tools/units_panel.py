@@ -1,4 +1,4 @@
-"""Unit converter tool panel."""
+# Unit converter tool panel.
 
 from textual import on
 from textual.app import ComposeResult

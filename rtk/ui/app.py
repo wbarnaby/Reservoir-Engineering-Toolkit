@@ -1,4 +1,4 @@
-"""Main application: console on the left, tool dock on the right"""
+# Main application: console on the left, tool dock on the right
 
 from importlib import import_module
 

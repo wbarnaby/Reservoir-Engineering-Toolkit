@@ -1,4 +1,4 @@
-"""Gas p/z material balance tool panel."""
+# Gas p/z material balance tool panel.
 
 from pathlib import Path
 
@@ -32,7 +32,7 @@ LINE_COLOR = (51, 255, 51)  # phosphor green
 
 
 def read_number(text, name):
-    """Convert a required input box's text to float."""
+    # Convert a required input box's text to float.
     text = text.strip()
     if not text:
         raise ValueError(f"Enter a value for {name}")
@@ -43,19 +43,19 @@ def read_number(text, name):
 
 
 def read_optional(text, name):
-    """Like read_number, but a blank box returns None."""
+    # Like read_number, but a blank box returns None.
     if not text.strip():
         return None
     return read_number(text, name)
 
 
 def field(label, widget):
-    """A small column: label on top, widget below."""
+    # A small column: label on top, widget below.
     return Vertical(Label(label), widget, classes="field")
 
 
 class PzPanel(ToolPanel):
-    """Load a production history, fit p/z, report G and reserves."""
+    # Load a production history, fit p/z, report G and reserves.
 
     def __init__(self, title):
         super().__init__(title)
@@ -103,7 +103,7 @@ class PzPanel(ToolPanel):
                 yield DataTable(id="pz-table")
 
     def report(self, text, error=False):
-        """Show a message in the results box and the console."""
+        # Show a message in the results box and the console.
         self.query_one("#pz-results", Static).update(text)
         if error:
             self.notify(text, severity="error")
@@ -114,7 +114,7 @@ class PzPanel(ToolPanel):
 
     @on(Button.Pressed, "#browse")
     def browse(self) -> None:
-        """Open an in-terminal file picker over the app."""
+        # Open an in-terminal file picker over the app.
         csv_only = Filters(
             ("CSV files", lambda path: path.suffix.lower() == ".csv"),
             ("All files", lambda _path: True),
@@ -126,7 +126,7 @@ class PzPanel(ToolPanel):
         )
 
     def file_chosen(self, path) -> None:
-        """Called when the picker closes. path is None if cancelled."""
+        # Called when the picker closes. path is None if cancelled.
         if path is None:
             return
         self.query_one("#path", Input).value = str(path)
@@ -153,7 +153,7 @@ class PzPanel(ToolPanel):
         self.report(f"Loaded {rows} rows from {path}")
 
     def fill_table(self):
-        """Show the loaded data in the Data tab."""
+        # Show the loaded data in the Data tab.
         table = self.query_one("#pz-table", DataTable)
         table.clear(columns=True)
         names = list(self.data)
@@ -200,7 +200,7 @@ class PzPanel(ToolPanel):
         self.plot_cole(gp, ho, g_ho, unit)
 
     def show_results(self, pz, g_ho, unit):
-        """Write the numeric results."""
+        # Write the numeric results.
         stats = pz["stats"]
         lines = [
             f"G (p/z)          = {pz['G']:.4g} {unit}",
@@ -222,7 +222,7 @@ class PzPanel(ToolPanel):
         )
 
     def plot_pz(self, gp, pz, unit):
-        """Measured p/z points plus the fitted line out to G."""
+        # Measured p/z points plus the fitted line out to G.
         plot = self.query_one("#pz-plot", PlotextPlot)
         plt = plot.plt
         plt.clear_data()
@@ -242,7 +242,7 @@ class PzPanel(ToolPanel):
         plot.refresh()
 
     def plot_cole(self, gp, ho, g_ho, unit):
-        """F/Eg vs Gp: flat means volumetric."""
+        # F/Eg vs Gp: flat means volumetric.
         gp_cole, ratio = cole_values(gp, ho["F"], ho["Eg"])
         ratio = convert(ratio, "scf", unit)
 

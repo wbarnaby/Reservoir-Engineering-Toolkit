@@ -1,4 +1,4 @@
-"""Base class every docked tool panel inherits from."""
+# Base class every docked tool panel inherits from.
 
 from textual import on
 from textual.app import ComposeResult

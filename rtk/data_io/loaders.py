@@ -12,13 +12,13 @@ import numpy as np
 
 
 def read_text(path):
-    """Read a text file. utf-8-sig strips the marker Excel adds."""
+    # Read a text file. utf-8-sig strips the marker Excel adds.
     with open(path, encoding="utf-8-sig") as file:
         return file.read()
 
 
 def _is_skippable(row):
-    """True for blank rows and comment rows starting with #."""
+    # True for blank rows and comment rows starting with #.
     if not row or all(cell.strip() == "" for cell in row):
         return True
     return row[0].strip().startswith("#")
