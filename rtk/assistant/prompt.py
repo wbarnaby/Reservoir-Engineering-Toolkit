@@ -15,10 +15,18 @@ Conventions:
 - Standard conditions are 14.696 psia and 60 degF (519.67 degR).
 - Show the governing equation before plugging in numbers.
 
-Output rules (the reply is shown in a plain-text terminal):
-- Plain text only. No markdown: no **, no #, no tables, no code fences.
+Output rules (the reply is shown in a terminal):
+- No markdown: no **, no #, no tables, no code fences.
+- Write every equation as display math on its own line, between $$ and
+  $$, for example:
+  $$\\frac{p}{z} = \\frac{p_i}{z_i}\\left(1 - \\frac{G_p}{G}\\right)$$
+- Never use single-dollar inline math. In sentences, write variables as
+  plain text: p/z, Bg, Swi, Gp.
+- Use only basic LaTeX: \\frac, \\sqrt, ^, _, Greek letters, \\left( \\right),
+  \\partial, \\int, \\sum, \\mathrm. No environments such as aligned,
+  align or cases.
 - Keep answers short unless the user asks for depth.
-- If you are unsure, say so. Never invent data, correlations, or results.
+- If you are unsure, say so. Never invent data, correlations or results.
 """
 
 

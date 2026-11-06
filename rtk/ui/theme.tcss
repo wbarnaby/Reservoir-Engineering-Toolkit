@@ -2,6 +2,7 @@
 
 Screen {
     background: $background;
+    layers: base overlay;
 }
 
 #main {
@@ -100,4 +101,29 @@ PlotextPlot {
 #pz-table {
     height: auto;
     max-height: 14;
+}
+
+/* ---------- usage meter (floats over the log, top-right) ---------- */
+
+#meter {
+    display: none;
+    layer: overlay;
+    dock: top;
+    width: 1fr;
+    height: auto;
+    text-align: right;
+    padding: 0 2 0 0;
+    color: $accent;
+    background: transparent;
+}
+
+/* ---------- chat log (text lines + LaTeX images) ---------- */
+
+.log-line {
+    width: 1fr;
+    height: auto;
+}
+
+.log-math {
+    margin: 0 0 0 2;
 }

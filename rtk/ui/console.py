@@ -10,8 +10,10 @@ from rich.text import Text
 from textual import on, work
 from textual.app import ComposeResult
 from textual.containers import Vertical
-from textual.widgets import Input, RichLog
+from textual.widgets import Input
 
+from rtk.ui.meter import UsageMeterWidget
+from rtk.ui.chatlog import GRAPHICS, ChatLog
 from rtk.ui.registry import TOOLS
 from rtk.ui.theme import AMBER, BANNER, DIM_GREEN, GREEN, RED
 
@@ -28,10 +30,12 @@ class ConsolePane(Vertical):
         self.mode = "command"
         self.api_key = None  # kept in memory only, never written to disk
         self.session = None  # ChatSession once AI mode starts
+        self.meter = None
         self.busy = False  # True while a reply is streaming
 
     def compose(self) -> ComposeResult:
-        yield RichLog(id="log", markup=True, wrap=True)
+        yield ChatLog(id="log")
+        yield UsageMeterWidget(id="meter")
         yield Input(placeholder=COMMAND_HINT, id="cmd")
 
     def on_mount(self) -> None:
@@ -41,7 +45,7 @@ class ConsolePane(Vertical):
 
     def print_line(self, text):
         # Write one line to the log (a markup string or a rich Text).
-        self.query_one("#log", RichLog).write(text)
+        self.query_one("#log", ChatLog).write(text)
 
     def set_mode(self, mode):
         # Switch modes and update the input box to match.
@@ -82,7 +86,7 @@ class ConsolePane(Vertical):
         if command in ("help", "?"):
             self.show_help()
         elif command == "clear":
-            self.query_one("#log", RichLog).clear()
+            self.query_one("#log", ChatLog).clear()
         elif command == "close":
             await self.app.action_close_tool()
         elif command in ("quit", "exit"):
@@ -138,9 +142,13 @@ class ConsolePane(Vertical):
         # Create the chat session and switch to chat mode.
         # imported here so the app starts fast and works without the
         # anthropic package until AI mode is actually used
+        from rtk.assistant.config import MODEL
         from rtk.assistant.session import ChatSession
+        from rtk.assistant.usage import UsageMeter
 
         self.session = ChatSession(self.api_key)
+        self.meter = UsageMeter(MODEL)
+        self.query_one("#meter", UsageMeterWidget).show(self.meter)
         self.set_mode("chat")
         self.print_line(Text("AI assistant ready.", style=f"bold {GREEN}"))
 
@@ -151,6 +159,8 @@ class ConsolePane(Vertical):
             self.print_line(Text("Left AI mode.", DIM_GREEN))
         elif text == ":clear":
             self.session.reset()
+            self.meter.reset()
+            self.query_one("#meter", UsageMeterWidget).show(self.meter)
             self.print_line(Text("Conversation cleared.", DIM_GREEN))
         elif self.busy:
             self.notify("Still answering, please wait", severity="warning")
@@ -159,24 +169,27 @@ class ConsolePane(Vertical):
 
     @work(exclusive=True, group="ai")
     async def ask(self, text):
-        # Stream one reply into the log, line by line.
+        """Stream one reply into the log: text lines and LaTeX images."""
         import anthropic
 
+        from rtk.assistant.latex import MathStreamer
         from rtk.assistant.session import friendly_error
 
         self.busy = True
         self.print_line(Text(f"you> {text}", style=AMBER))
-        self.print_line(Text("...", style=DIM_GREEN))
 
+        streamer = MathStreamer()
         buffer = ""
         try:
             async for piece in self.session.reply(text):
                 buffer += piece
                 *complete, buffer = buffer.split("\n")
                 for line in complete:
-                    self.print_line(Text(line, style=GREEN))
+                    await self.show_segments(streamer.feed(line))
             if buffer:
-                self.print_line(Text(buffer, style=GREEN))
+                await self.show_segments(streamer.feed(buffer))
+            await self.show_segments(streamer.finish())
+            self.update_meter()
         except anthropic.APIError as err:
             self.print_line(Text(friendly_error(err), style=RED))
             if isinstance(err, anthropic.AuthenticationError):
@@ -184,3 +197,33 @@ class ConsolePane(Vertical):
                 self.set_mode("command")
         finally:
             self.busy = False
+
+    async def show_segments(self, segments):
+        """Print text segments; render math segments as images."""
+        import asyncio
+
+        from rtk.assistant.latex import render_latex
+
+        log = self.query_one("#log", ChatLog)
+        for kind, content in segments:
+            if kind == "text":
+                log.write(Text(content, style=GREEN))
+                continue
+            if not GRAPHICS:
+                # terminal cannot draw images: show the LaTeX source
+                log.write(Text(f"  {content}", style=AMBER))
+                continue
+            try:
+                # rendering takes ~50 ms; a thread keeps the UI responsive
+                picture = await asyncio.to_thread(render_latex, content)
+            except ValueError:
+                log.write(Text(f"[LaTeX] {content}", style=DIM_GREEN))
+            else:
+                log.write_image(picture)
+
+    def update_meter(self):
+        # Record the latest turn's usage and refresh the readout.
+        usage = self.session.last_usage
+        if usage is not None:
+            self.meter.record(usage)
+            self.query_one("#meter", UsageMeterWidget).show(self.meter)

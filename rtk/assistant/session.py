@@ -18,6 +18,7 @@ class ChatSession:
             client = anthropic.AsyncAnthropic(api_key=api_key)
         self.client = client
         self.history = []
+        self.last_usage = None
 
     async def reply(self, user_text):
         # Send user_text and yield the reply in pieces as it streams.
@@ -39,6 +40,7 @@ class ChatSession:
             raise
 
         self.history.append({"role": "assistant", "content": final.content})
+        self.last_usage = final.usage
 
     def reset(self):
         # Forget the conversation.
