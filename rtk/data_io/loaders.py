@@ -7,8 +7,12 @@ part that reads a file from disk.
 
 import csv
 import io
+from pathlib import Path
 
 import numpy as np
+
+# Sample data ships inside the package (rtk/data)
+SAMPLE_DIR = Path(__file__).resolve().parent.parent / "data"
 
 
 def read_text(path):

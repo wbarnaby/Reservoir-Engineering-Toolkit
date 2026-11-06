@@ -12,8 +12,8 @@ from textual.app import ComposeResult
 from textual.containers import Vertical
 from textual.widgets import Input
 
-from rtk.ui.meter import UsageMeterWidget
 from rtk.ui.chatlog import GRAPHICS, ChatLog
+from rtk.ui.meter import UsageMeterWidget
 from rtk.ui.registry import TOOLS
 from rtk.ui.theme import AMBER, BANNER, DIM_GREEN, GREEN, RED
 

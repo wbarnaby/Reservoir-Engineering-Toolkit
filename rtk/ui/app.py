@@ -22,7 +22,7 @@ class ToolkitApp(App):
     ]
 
     def compose(self) -> ComposeResult:
-        yield Header()
+        yield Header(icon="≡")
         with Horizontal(id="main"):
             yield ConsolePane(id="console")
             yield Vertical(id="dock")

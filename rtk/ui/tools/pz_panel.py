@@ -1,7 +1,5 @@
 # Gas p/z material balance tool panel.
 
-from pathlib import Path
-
 from textual import on
 from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
@@ -24,7 +22,7 @@ from rtk.core.material_balance import (
     pz_analysis,
 )
 from rtk.core.units import convert, units_for
-from rtk.data_io.loaders import parse_columns, read_text
+from rtk.data_io.loaders import SAMPLE_DIR, parse_columns, read_text
 from rtk.ui.tools.base import ToolPanel
 
 POINT_COLOR = (255, 176, 0)  # amber, (r, g, b)
@@ -64,7 +62,7 @@ class PzPanel(ToolPanel):
     def compose_body(self) -> ComposeResult:
         yield Label("CSV file (columns: gp, p, z; optional wp)")
         with Horizontal(classes="row"):
-            yield Input(value="data/pz_example.csv", id="path")
+            yield Input(value=str(SAMPLE_DIR / "pz_example.csv"), id="path")
             yield Button("Browse", id="browse")
             yield Button("Load", id="load")
 
@@ -119,9 +117,8 @@ class PzPanel(ToolPanel):
             ("CSV files", lambda path: path.suffix.lower() == ".csv"),
             ("All files", lambda _path: True),
         )
-        start = Path("data") if Path("data").is_dir() else Path.cwd()
         self.app.push_screen(
-            FileOpen(location=start, title="Open CSV", filters=csv_only),
+            FileOpen(location=SAMPLE_DIR, title="Open CSV", filters=csv_only),
             callback=self.file_chosen,
         )
 
