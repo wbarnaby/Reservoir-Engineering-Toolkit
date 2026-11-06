@@ -12,6 +12,8 @@ from rtk.assistant.prompt import build_system_prompt
 class ChatSession:
     # Holds the API client and the message history for one chat.
 
+    errors = anthropic.APIError
+
     def __init__(self, api_key, client=None):
         # client can be passed in so tests can use a fake one
         if client is None:
@@ -45,6 +47,11 @@ class ChatSession:
     def reset(self):
         # Forget the conversation.
         self.history.clear()
+
+    def explain(self, err):
+        # Return the line to show, and whether the user is now locked out.
+        locked_out = isinstance(err, anthropic.AuthenticationError)
+        return friendly_error(err), locked_out
 
 
 def friendly_error(err):  # noqa: N805

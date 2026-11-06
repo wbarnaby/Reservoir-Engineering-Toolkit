@@ -21,6 +21,7 @@ from packaging.version import Version
 ENTRY = "rtk.ui.app:ToolkitApp"
 PACKAGE = "rtk"
 OUTPUT = Path("dist")
+WORKER_SETTINGS = Path("web/worker/assistant.generated.json")
 TITLE = "Reservoir Toolkit"
 REQUIREMENTS = [
     "numpy",
@@ -79,6 +80,25 @@ def build():
     subprocess.run(command, check=True)
 
 
+def write_worker_settings():
+    """Give the Worker the assistant's settings, so they live in one place.
+
+    The Worker decides these itself rather than trusting the browser, so
+    Access credentials can only ever run this assistant.
+    """
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+    from rtk.assistant import config
+    from rtk.assistant.prompt import build_system_prompt
+
+    settings = {
+        "model": config.MODEL,
+        "max_tokens": config.MAX_TOKENS,
+        "effort": config.EFFORT,
+        "system": build_system_prompt(),
+    }
+    WORKER_SETTINGS.write_text(json.dumps(settings, indent=2), encoding="utf-8")
+
+
 def fix_separators(sources_file):
     """Rewrite backslashes in bundled file paths. Returns how many changed."""
     data = json.loads(sources_file.read_text(encoding="utf-8"))
@@ -115,3 +135,5 @@ if __name__ == "__main__":
     print(f"fixed {count} Windows paths in {OUTPUT / 'sources.json'}")
     enable_webgl(OUTPUT / "main.mjs")
     print("enabled WebGL renderer")
+    write_worker_settings()
+    print(f"wrote {WORKER_SETTINGS}")

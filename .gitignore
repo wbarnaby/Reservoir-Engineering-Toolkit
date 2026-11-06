@@ -11,3 +11,9 @@ __pycache__/
 venv/
 
 dist/
+
+# Worker: dependencies, local state, local secrets, build output
+node_modules/
+.wrangler/
+.dev.vars*
+web/worker/assistant.generated.json

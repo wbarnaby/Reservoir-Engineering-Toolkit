@@ -1,0 +1,13 @@
+{
+  "name": "reservoir-toolkit",
+  "private": true,
+  "type": "module",
+  "description": "Cloudflare Worker that serves the web build and its AI endpoint",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1.6.0",
+    "jose": "^6.2.15"
+  },
+  "devDependencies": {
+    "wrangler": "^4.158.0"
+  }
+}

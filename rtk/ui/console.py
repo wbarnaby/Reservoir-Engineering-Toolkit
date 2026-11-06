@@ -1,9 +1,11 @@
 """Left pane: scrolling output log plus a command input line.
 
-The console has three modes:
-    "command"  normal tool commands
-    "key"      waiting for an API key (input is masked)
-    "chat"     messages go to the AI assistant
+The console has these modes:
+    "command"        normal tool commands
+    "key"            waiting for an API key (input is masked)
+    "access_id"      browser only: waiting for an Access Client ID
+    "access_secret"  browser only: waiting for its secret (input is masked)
+    "chat"           messages go to the AI assistant
 """
 
 from rich.text import Text
@@ -20,6 +22,8 @@ from rtk.ui.theme import AMBER, BANNER, DIM_GREEN, GREEN, RED
 COMMAND_HINT = "type a command (help)"
 CHAT_HINT = "ask the assistant (:clear resets, :exit leaves)"
 KEY_HINT = "paste your Anthropic API key (:exit cancels)"
+ACCESS_ID_HINT = "enter your Client ID (:exit cancels)"
+ACCESS_SECRET_HINT = "enter your Client Secret (:exit cancels)"
 
 
 class ConsolePane(Vertical):
@@ -29,6 +33,7 @@ class ConsolePane(Vertical):
         super().__init__(**kwargs)
         self.mode = "command"
         self.api_key = None  # kept in memory only, never written to disk
+        self.access_id = None  # browser only, also never written to disk
         self.session = None  # ChatSession once AI mode starts
         self.meter = None
         self.busy = False  # True while a reply is streaming
@@ -51,12 +56,18 @@ class ConsolePane(Vertical):
         # Switch modes and update the input box to match.
         self.mode = mode
         box = self.query_one("#cmd", Input)
-        box.password = mode == "key"
+        box.password = mode in ("key", "access_secret")
         if mode == "command":
             box.placeholder = COMMAND_HINT
             self.border_title = "CONSOLE"
         elif mode == "key":
             box.placeholder = KEY_HINT
+            self.border_title = "CONSOLE: AI SETUP"
+        elif mode == "access_id":
+            box.placeholder = ACCESS_ID_HINT
+            self.border_title = "CONSOLE: AI SETUP"
+        elif mode == "access_secret":
+            box.placeholder = ACCESS_SECRET_HINT
             self.border_title = "CONSOLE: AI SETUP"
         else:
             box.placeholder = CHAT_HINT
@@ -73,6 +84,10 @@ class ConsolePane(Vertical):
 
         if self.mode == "key":
             self.receive_key(text)
+        elif self.mode == "access_id":
+            self.receive_access_id(text)
+        elif self.mode == "access_secret":
+            self.receive_access_secret(text)
         elif self.mode == "chat":
             self.chat_input(text)
         else:
@@ -109,7 +124,15 @@ class ConsolePane(Vertical):
 
     def start_ai(self):
         # Enter AI mode, asking for a key first if none is available.
-        from rtk.assistant.config import key_from_environment
+        from rtk.assistant.config import IN_BROWSER, key_from_environment
+
+        if IN_BROWSER:
+            self.print_line(
+                f"[{DIM_GREEN}]AI assistant needs Cloudflare Access "
+                "credentials.[/]"
+            )
+            self.set_mode("access_id")
+            return
 
         if self.api_key is None:
             self.api_key = key_from_environment()
@@ -138,15 +161,47 @@ class ConsolePane(Vertical):
         self.api_key = text
         self.open_session()
 
-    def open_session(self):
+    def receive_access_id(self, text):
+        # Handle the Client ID, the "username" of an Access service token.
+        if text == ":exit":
+            self.set_mode("command")
+            return
+        self.access_id = text
+        self.set_mode("access_secret")
+
+    def receive_access_secret(self, text):
+        # Handle the Client Secret, then ask Access to approve the pair.
+        client_id, self.access_id = self.access_id, None
+        self.set_mode("command")
+        if text != ":exit":
+            self.check_access(client_id, text)
+
+    @work(exclusive=True, group="ai")
+    async def check_access(self, client_id, client_secret):
+        """Open AI mode only once Cloudflare Access approves."""
+        from rtk.assistant.web_session import GatewayError, WebChatSession
+
+        self.print_line(Text("Checking with Cloudflare Access...", DIM_GREEN))
+        session = WebChatSession(client_id, client_secret)
+        try:
+            await session.verify()
+        except GatewayError as err:
+            self.print_line(Text(str(err), style=RED))
+        else:
+            self.open_session(session)
+
+    def open_session(self, session=None):
         # Create the chat session and switch to chat mode.
         # imported here so the app starts fast and works without the
         # anthropic package until AI mode is actually used
         from rtk.assistant.config import MODEL
-        from rtk.assistant.session import ChatSession
         from rtk.assistant.usage import UsageMeter
 
-        self.session = ChatSession(self.api_key)
+        if session is None:
+            from rtk.assistant.session import ChatSession
+
+            session = ChatSession(self.api_key)
+        self.session = session
         self.meter = UsageMeter(MODEL)
         self.query_one("#meter", UsageMeterWidget).show(self.meter)
         self.set_mode("chat")
@@ -170,10 +225,7 @@ class ConsolePane(Vertical):
     @work(exclusive=True, group="ai")
     async def ask(self, text):
         """Stream one reply into the log: text lines and LaTeX images."""
-        import anthropic
-
         from rtk.assistant.latex import MathStreamer
-        from rtk.assistant.session import friendly_error
 
         self.busy = True
         self.print_line(Text(f"you> {text}", style=AMBER))
@@ -190,10 +242,12 @@ class ConsolePane(Vertical):
                 await self.show_segments(streamer.feed(buffer))
             await self.show_segments(streamer.finish())
             self.update_meter()
-        except anthropic.APIError as err:
-            self.print_line(Text(friendly_error(err), style=RED))
-            if isinstance(err, anthropic.AuthenticationError):
+        except self.session.errors as err:
+            message, locked_out = self.session.explain(err)
+            self.print_line(Text(message, style=RED))
+            if locked_out:
                 self.api_key = None
+                self.session = None
                 self.set_mode("command")
         finally:
             self.busy = False

@@ -3,13 +3,21 @@
   "name": "reservoir-toolkit",
   "compatibility_date": "2026-11-06",
 
+  // handles /api/ai and holds the Anthropic key; see web/README.md
+  "main": "web/worker/index.js",
+
   // the static site that web/build.py writes
   "assets": {
-    "directory": "./dist"
+    "directory": "./dist",
+    "run_worker_first": ["/api/*"]
   },
 
   // serve the Worker at this address; Cloudflare creates DNS and HTTPS
   "routes": [
     { "pattern": "rtk.willbarnaby.com", "custom_domain": true }
-  ]
+  ],
+
+  // Access protects the custom domain, so no other address should exist
+  "workers_dev": false,
+  "preview_urls": false
 }
